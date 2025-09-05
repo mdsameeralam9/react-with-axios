@@ -1,5 +1,4 @@
-// App.tsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Header } from './components/Header';
 import PostsLocal from './components/PostsLocal';
 import PostsWithInstance from './components/PostsWithInstance';
@@ -7,7 +6,6 @@ import PostsWithHook from './components/PostsWithHook';
 import ProfileAutoRefresh from './components/ProfileAutoRefresh';
 
 // Import the components built earlier
-
 type TabKey = 'local' | 'instance' | 'hook' | 'auto';
 
 export default function App() {

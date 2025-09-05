@@ -1,6 +1,3 @@
-// Header.tsx
-import React from 'react';
-
 type TabKey = 'local' | 'instance' | 'hook' | 'auto';
 
 const LABELS: Record<TabKey, string> = {
