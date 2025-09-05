@@ -1,4 +1,4 @@
-import { useAxios } from './useAxios';
+import { useAxios } from '../util/useAxios';
 
 export default function PostsWithHook() {
   const { data, loading, error, refetch } = useAxios<any[]>({ url: '/posts', method: 'GET' }, []);
