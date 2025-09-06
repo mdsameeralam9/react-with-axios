@@ -1,11 +1,15 @@
 // authApi.ts
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios from 'axios';
+import type { AxiosError, AxiosRequestConfig } from 'axios';
+import type { InternalAxiosRequestConfig } from 'axios';
 
+// Create instance
 export const authApi = axios.create({
   baseURL: 'https://jsonplaceholder.typicode.com', // your backend with auth
   timeout: 10000,
 });
 
+// Token helpers
 function getAccessToken() {
   return localStorage.getItem('access_token');
 }
@@ -16,6 +20,7 @@ function getRefreshToken() {
   return localStorage.getItem('refresh_token');
 }
 
+// Queue for pending requests during refresh
 let isRefreshing = false;
 let pendingQueue: {
   resolve: (value?: unknown) => void;
@@ -28,7 +33,6 @@ function processQueue(error: AxiosError | null, token: string | null) {
     if (error) {
       reject(error);
     } else {
-      // retry with updated token
       if (token) {
         config.headers = config.headers ?? {};
         config.headers.Authorization = `Bearer ${token}`;
@@ -39,8 +43,8 @@ function processQueue(error: AxiosError | null, token: string | null) {
   pendingQueue = [];
 }
 
-// Attach token
-authApi.interceptors.request.use((config) => {
+// Attach token on requests
+authApi.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = getAccessToken();
   if (token) {
     config.headers = config.headers ?? {};
@@ -49,18 +53,18 @@ authApi.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401s
+// Handle 401s and refresh
 authApi.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
-    const original = error.config!;
+    const original = error.config as AxiosRequestConfig; // cast to a mutable request config for retry
     const status = error.response?.status;
 
     if (status !== 401) {
       return Promise.reject(error);
     }
 
-    // Prevent infinite loop for refresh endpoint itself
+    // Prevent loop for refresh endpoint itself
     if ((original.url ?? '').includes('/auth/refresh')) {
       return Promise.reject(error);
     }
@@ -77,9 +81,9 @@ authApi.interceptors.response.use(
       const rToken = getRefreshToken();
       if (!rToken) throw error;
 
-      // perform refresh
+      // perform refresh (example endpoint/payload)
       const resp = await axios.post<{ access_token: string }>(
-        'https://jsonplaceholder.typicode.com',
+        'https://jsonplaceholder.typicode.com/auth/refresh',
         { refresh_token: rToken },
         { timeout: 10000 }
       );
@@ -89,16 +93,15 @@ authApi.interceptors.response.use(
       // update default header for subsequent requests
       authApi.defaults.headers.common.Authorization = `Bearer ${newToken}`;
 
-      // retry queued + current original request
+      // retry queued
       processQueue(null, newToken);
 
+      // retry current original request with new token
       original.headers = original.headers ?? {};
       original.headers.Authorization = `Bearer ${newToken}`;
       return authApi.request(original);
     } catch (refreshErr: any) {
       processQueue(refreshErr, null);
-      // Optional: redirect to login
-      // window.location.href = '/login';
       return Promise.reject(refreshErr);
     } finally {
       isRefreshing = false;

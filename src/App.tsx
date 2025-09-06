@@ -16,9 +16,9 @@ export default function App() {
       <Header active={tab} onChange={setTab} />
       <main style={{ paddingTop: 8 }}>
         {tab === 'local' && <PostsLocal />}
-        {tab === 'instance' && <PostsWithInstance />}
+       {tab === 'instance' && <PostsWithInstance />}
         {tab === 'hook' && <PostsWithHook />}
-        {tab === 'auto' && <ProfileAutoRefresh />}
+        {tab === 'auto' && <ProfileAutoRefresh /> }
       </main>
     </div>
   );

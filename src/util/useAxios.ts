@@ -1,6 +1,8 @@
 // useAxios.ts
 import { useCallback, useEffect, useRef, useState } from 'react';
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios from 'axios';
+import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+
 import { api } from './api';
 
 type State<T> = { data: T | null; error: AxiosError | null; loading: boolean };
