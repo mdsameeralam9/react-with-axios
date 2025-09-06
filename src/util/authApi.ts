@@ -5,19 +5,23 @@ import type { InternalAxiosRequestConfig } from 'axios';
 
 // Create instance
 export const authApi = axios.create({
-  baseURL: 'https://jsonplaceholder.typicode.com', // your backend with auth
+  baseURL: 'https://dummyjson.com', // your backend with auth
   timeout: 10000,
 });
 
 // Token helpers
 function getAccessToken() {
-  return localStorage.getItem('access_token');
+  return localStorage.getItem('accessToken');
 }
 function setAccessToken(t: string) {
-  localStorage.setItem('access_token', t);
+  localStorage.setItem('accessToken', t);
 }
 function getRefreshToken() {
-  return localStorage.getItem('refresh_token');
+  return localStorage.getItem('refreshToken');
+}
+
+function setRefreshToken(t: string) {
+  localStorage.setItem('refreshToken', t);
 }
 
 // Queue for pending requests during refresh
@@ -82,12 +86,13 @@ authApi.interceptors.response.use(
       if (!rToken) throw error;
 
       // perform refresh (example endpoint/payload)
-      const resp = await axios.post<{ access_token: string }>(
-        'https://jsonplaceholder.typicode.com/auth/refresh',
-        { refresh_token: rToken },
+      const resp = await axios.post(
+        'https://dummyjson.com/auth/refresh',
+        { refreshToken: rToken, expiresInMins: 30 },
         { timeout: 10000 }
       );
-      const newToken = resp.data.access_token;
+      const newToken = resp.accessToken;
+      setRefreshToken(resp.refreshToken)
       setAccessToken(newToken);
 
       // update default header for subsequent requests
